@@ -1,0 +1,1050 @@
+# Record Relationship Determination (RRD) Procedure
+
+The **Record Relationship Determination procedure** should occur **before deduplication**. Its purpose is to determine what relationship, if any, exists between two or more records, without prematurely treating records concerning the same subject as duplicates.
+
+## 1. Purpose
+
+Determine whether two or more records:
+
+* represent the same underlying recording;
+* represent the same observation or event;
+* concern the same subject but different observations;
+* were independently created;
+* were copied, replicated, transformed, derived, or aggregated;
+* corroborate one another;
+* conflict with one another;
+* supersede one another;
+* partially overlap;
+* or have no meaningful relationship.
+
+The procedure therefore changes the basic question from:
+
+> "Are these records duplicates?"
+
+to:
+
+> **"What is the evidentiary and informational relationship between these records, and does that relationship justify deduplication?"**
+
+---
+
+# 2. Core Principle
+
+The procedure must independently evaluate at least four identities:
+
+| Identity                 | Question                                                          |
+| ------------------------ | ----------------------------------------------------------------- |
+| **Record identity**      | Are these the same recording or representations of one recording? |
+| **Subject identity**     | Do these records concern the same entity/subject?                 |
+| **Observation identity** | Do these records describe the same observation?                   |
+| **Event identity**       | Do these records concern the same underlying event?               |
+
+These identities must **not** be collapsed into one.
+
+For example:
+
+```text
+Person A
+   │
+   ├── Observation at 09:00
+   │      └── Record R1
+   │
+   ├── Observation at 10:00
+   │      └── Record R2
+   │
+   └── Observation at 11:00
+          └── Record R3
+```
+
+`R1`, `R2`, and `R3` may all concern the same person while being entirely legitimate distinct records.
+
+---
+
+# 3. Inputs
+
+The procedure accepts:
+
+### 3.1 Records
+
+One or more candidate records:
+
+```text
+Record A
+Record B
+...
+Record N
+```
+
+### 3.2 Available metadata
+
+Potentially including:
+
+* record identifier;
+* source identifier;
+* originating system;
+* originating node;
+* creator;
+* recording actor;
+* creation timestamp;
+* observation timestamp;
+* modification timestamp;
+* ingestion timestamp;
+* publication timestamp;
+* location;
+* referenced entities;
+* referenced objects;
+* referenced events;
+* document identifiers;
+* transaction identifiers;
+* hashes;
+* version identifiers;
+* parent record;
+* source document;
+* provenance information.
+
+### 3.3 Content
+
+The substantive information contained by each record.
+
+### 3.4 Context
+
+Information about:
+
+* the system producing the records;
+* the purpose of the records;
+* the recording process;
+* applicable identifiers;
+* known replication pathways;
+* known transformations;
+* organizational hierarchy.
+
+---
+
+# 4. Outputs
+
+The procedure produces a **Record Relationship Determination**.
+
+A determination should contain at minimum:
+
+```json
+{
+  "record_a_id": "...",
+  "record_b_id": "...",
+
+  "record_identity_relation": "...",
+  "subject_identity_relation": "...",
+  "observation_identity_relation": "...",
+  "event_identity_relation": "...",
+
+  "provenance_relation": "...",
+  "temporal_relation": "...",
+  "spatial_relation": "...",
+  "content_relation": "...",
+
+  "independence_status": "...",
+
+  "relationship_type": "...",
+
+  "deduplication_eligibility": "...",
+  "recommended_action": "...",
+
+  "confidence": 0.0,
+  "evidence": [],
+  "unresolved_questions": [],
+  "review_required": false
+}
+```
+
+---
+
+# 5. Procedure
+
+## Step 1 — Establish the Record Boundary
+
+Determine exactly what constitutes each candidate record.
+
+Do not assume that:
+
+* a file equals a record;
+* a database row equals a record;
+* a document equals one record;
+* multiple rows necessarily constitute multiple records.
+
+Determine:
+
+```text
+Record A = ?
+Record B = ?
+```
+
+Identify whether each is:
+
+* atomic;
+* composite;
+* embedded;
+* serialized;
+* replicated;
+* aggregated;
+* derived.
+
+### Result
+
+A defined comparison unit for each candidate.
+
+---
+
+# 6. Step 2 — Establish Record Identity
+
+Determine whether the records are actually different representations of the same underlying recording.
+
+Check:
+
+* immutable record ID;
+* source record ID;
+* transaction ID;
+* accession number;
+* document ID;
+* hash;
+* canonical identifier;
+* source URI;
+* version identifier;
+* sequence number;
+* replication identifier.
+
+### Possible result
+
+```text
+same_record
+distinct_records
+possible_same_record
+indeterminate
+```
+
+An exact match on a strong immutable identifier should generally have greater evidentiary weight than similarity of descriptive content.
+
+---
+
+# 7. Step 3 — Establish Subject Identity
+
+Determine which entities the records concern.
+
+For every referenced subject, extract an identity representation:
+
+```text
+Subject:
+  type
+  identifier
+  name
+  aliases
+  attributes
+  relationships
+```
+
+Compare:
+
+* authoritative identifiers;
+* alternate identifiers;
+* names;
+* aliases;
+* addresses;
+* organizational relationships;
+* physical characteristics;
+* account numbers;
+* asset identifiers;
+* other identifying attributes.
+
+### Important rule
+
+**Same subject ≠ duplicate record.**
+
+A positive subject match only establishes that the records concern the same subject.
+
+It does not establish:
+
+```text
+same record
+same observation
+same event
+duplicate
+```
+
+---
+
+# 8. Step 4 — Establish Event Identity
+
+Determine whether the records concern the same underlying event.
+
+Compare:
+
+* event type;
+* event identifier;
+* participants;
+* start time;
+* end time;
+* location;
+* causal relationships;
+* sequence;
+* event-specific attributes.
+
+Classify:
+
+```text
+same_event
+different_events
+possibly_same_event
+nested_event
+event_sequence
+indeterminate
+```
+
+Example:
+
+```text
+R1: Person enters building at 09:00
+R2: Person enters building at 09:00
+```
+
+These may describe the same event.
+
+But:
+
+```text
+R1: Person enters building at 09:00
+R2: Person exits building at 11:00
+```
+
+concern the same subject but different events.
+
+---
+
+# 9. Step 5 — Establish Observation Identity
+
+An observation is distinct from both the subject and the record.
+
+Determine whether both records represent:
+
+> the same observation made about the same subject/event at substantially the same observational point.
+
+Compare:
+
+* observation timestamp;
+* observing system;
+* observer;
+* observation location;
+* observed state;
+* measurement;
+* measurement method;
+* observation conditions;
+* observation identifier.
+
+Classify:
+
+```text
+same_observation
+different_observations
+independent_observations
+possible_same_observation
+indeterminate
+```
+
+This is particularly important for distributed systems.
+
+Two nodes may independently observe the same event:
+
+```text
+Node A → Observation O1 → Record A
+Node B → Observation O2 → Record B
+```
+
+Even if:
+
+```text
+O1 ≈ O2
+```
+
+the records may legitimately remain distinct because they provide independent evidence.
+
+---
+
+# 10. Step 6 — Establish Provenance
+
+Trace where each record came from.
+
+For each record establish, where available:
+
+```text
+originating system
+    ↓
+originating node
+    ↓
+creator/observer
+    ↓
+original record
+    ↓
+transformations
+    ↓
+replications
+    ↓
+ingestion
+    ↓
+current record
+```
+
+Look specifically for:
+
+* `copied_from`;
+* `replicated_from`;
+* `imported_from`;
+* `exported_from`;
+* `derived_from`;
+* `transformed_from`;
+* `aggregated_from`;
+* `supersedes`;
+* `version_of`.
+
+### Critical distinction
+
+```text
+Independent records
+```
+
+versus
+
+```text
+Multiple representations of one record
+```
+
+The former generally should **not** be deduplicated merely because their contents match.
+
+The latter potentially should.
+
+---
+
+# 11. Step 7 — Compare Temporal Dimensions
+
+Do not use a single generic "timestamp."
+
+Separate at least:
+
+```text
+observation_time
+event_time
+record_creation_time
+record_modification_time
+ingestion_time
+publication_time
+replication_time
+supersession_time
+```
+
+Determine the temporal relationship.
+
+Possible classifications:
+
+```text
+same_time
+overlapping_time
+adjacent_time
+different_time
+successive_time
+unknown_time
+```
+
+A timestamp difference may indicate:
+
+* independent observations;
+* later replication;
+* later modification;
+* temporal succession;
+* clock error;
+* delayed ingestion.
+
+Therefore:
+
+> **Timestamp similarity is evidence, not proof of duplication.**
+
+---
+
+# 12. Step 8 — Compare Spatial Dimensions
+
+Extract all relevant spatial references.
+
+These may include:
+
+* coordinates;
+* addresses;
+* facilities;
+* buildings;
+* rooms;
+* jurisdictions;
+* administrative areas;
+* geographic names;
+* geofences;
+* routes;
+* source locations.
+
+Normalize them where possible.
+
+Determine:
+
+```text
+same_location
+nearby_location
+nested_location
+overlapping_location
+different_location
+unknown_location
+```
+
+Again:
+
+> Same location does not imply duplicate record.
+
+Two independently recorded observations at the same location may be precisely the records the system should preserve.
+
+---
+
+# 13. Step 9 — Compare Referenced Entities
+
+Extract entities from each record:
+
+```text
+persons
+organizations
+places
+objects
+assets
+vehicles
+documents
+accounts
+transactions
+events
+systems
+devices
+etc.
+```
+
+Construct an entity comparison matrix.
+
+Example:
+
+| Entity     | Record A | Record B | Relationship  |
+| ---------- | -------- | -------- | ------------- |
+| Person A   | ✓        | ✓        | same          |
+| Vehicle X  | ✓        | ✓        | same          |
+| Location Y | ✓        | ✓        | same          |
+| Event E    | ✓        | ✓        | possible same |
+| Device D1  | ✓        | D2       | different     |
+
+Entity overlap becomes evidence for relationship determination, but is not independently sufficient to establish duplication.
+
+---
+
+# 14. Step 10 — Compare Content
+
+Compare the substantive assertions.
+
+Determine whether the records contain:
+
+### Exact content equivalence
+
+```text
+A == B
+```
+
+### Normalized equivalence
+
+Different formatting, same information:
+
+```text
+"John Smith"
+"SMITH, JOHN"
+```
+
+### Semantic equivalence
+
+Different wording, same assertion.
+
+### Partial equivalence
+
+Some assertions overlap while others differ.
+
+### Contradiction
+
+The records make incompatible assertions.
+
+### Complementarity
+
+Each record contributes information absent from the other.
+
+Classify:
+
+```text
+identical
+equivalent
+highly_similar
+partially_overlapping
+complementary
+different
+contradictory
+indeterminate
+```
+
+---
+
+# 15. Step 11 — Determine Independence
+
+This is one of the most important stages.
+
+Determine whether the records were generated:
+
+### Independently
+
+```text
+Node A → R1
+Node B → R2
+```
+
+### Through replication
+
+```text
+Original R1
+   ↓
+Node A
+   ↓
+Node B
+   ↓
+R2
+```
+
+### Through transformation
+
+```text
+R1
+ ↓
+conversion
+ ↓
+R2
+```
+
+### Through derivation
+
+```text
+R1 + R2
+   ↓
+analysis
+   ↓
+R3
+```
+
+### Through aggregation
+
+```text
+R1 ─┐
+R2 ─┼→ R4
+R3 ─┘
+```
+
+### Through independent observation
+
+```text
+Observation A → R1
+Observation B → R2
+```
+
+The last case is especially important:
+
+**independent corroborating records should generally be retained rather than collapsed.**
+
+---
+
+# 16. Step 12 — Determine the Record Relationship
+
+Apply the accumulated evidence to the relationship taxonomy.
+
+Recommended relationship types:
+
+| Code                      | Relationship                                                   |
+| ------------------------- | -------------------------------------------------------------- |
+| `EXACT_DUPLICATE`         | Same recording/content                                         |
+| `RECORD_DUPLICATE`        | Same underlying record represented multiple times              |
+| `OBSERVATION_DUPLICATE`   | Same observation recorded multiple times                       |
+| `SUBJECT_MATCH`           | Same subject, different record/observation                     |
+| `EVENT_MATCH`             | Same event, potentially different observations                 |
+| `INDEPENDENT_OBSERVATION` | Independent observations of same subject/event                 |
+| `CORROBORATES`            | Independent record supports another                            |
+| `CONFLICTS_WITH`          | Records make conflicting assertions                            |
+| `PARTIAL_OVERLAP`         | Some content overlaps                                          |
+| `COMPLEMENTARY`           | Records provide different information about same matter        |
+| `SUPERSEDES`              | One record replaces a prior record                             |
+| `DERIVED_FROM`            | One record was derived from another                            |
+| `AGGREGATE_OF`            | One record summarizes multiple records                         |
+| `COPIED_FROM`             | One record is a reproduction                                   |
+| `TRANSFORMED_FROM`        | One representation derives through transformation              |
+| `RELATED`                 | Meaningfully related but relationship not otherwise classified |
+| `UNRELATED`               | No meaningful relationship                                     |
+| `INDETERMINATE`           | Evidence insufficient                                          |
+
+---
+
+# 17. Step 13 — Determine Deduplication Eligibility
+
+The relationship classification feeds a separate decision.
+
+### Generally eligible
+
+```text
+EXACT_DUPLICATE
+RECORD_DUPLICATE
+OBSERVATION_DUPLICATE
+COPIED_FROM
+```
+
+subject to provenance and retention rules.
+
+### Generally not eligible merely from relationship
+
+```text
+SUBJECT_MATCH
+EVENT_MATCH
+INDEPENDENT_OBSERVATION
+CORROBORATES
+COMPLEMENTARY
+CONFLICTS_WITH
+PARTIAL_OVERLAP
+DERIVED_FROM
+AGGREGATE_OF
+SUPERSEDES
+```
+
+These relationships normally require **retention and linkage**, rather than deletion or merging.
+
+---
+
+# 18. Step 14 — Select the Recommended Action
+
+The RRD procedure should not itself necessarily delete or merge anything.
+
+It should recommend an action:
+
+```text
+RETAIN_SEPARATELY
+MARK_AS_DUPLICATE
+MERGE
+LINK_AS_SAME_SUBJECT
+LINK_AS_SAME_EVENT
+LINK_AS_CORROBORATION
+LINK_AS_CONFLICT
+LINK_AS_DERIVED
+LINK_AS_AGGREGATE
+MARK_AS_SUPERSEDED
+SEND_TO_REVIEW
+DEFER
+NO_ACTION
+```
+
+This separation is important:
+
+```text
+Relationship determination
+        ↓
+Deduplication eligibility
+        ↓
+Action determination
+        ↓
+Actual deduplication/reconciliation
+```
+
+---
+
+# 19. Step 15 — Assign Confidence
+
+Confidence should be based on **evidence**, not simply similarity.
+
+A useful conceptual scale:
+
+```text
+0.00–0.19  insufficient
+0.20–0.39  weak
+0.40–0.59  moderate
+0.60–0.79  strong
+0.80–0.94  very strong
+0.95–1.00  exceptionally strong
+```
+
+However, confidence should not replace categorical evidence.
+
+For example:
+
+```text
+same immutable record ID
+→ strong deterministic evidence
+```
+
+whereas:
+
+```text
+same name + same city
+→ weak probabilistic evidence
+```
+
+---
+
+# 20. Step 16 — Preserve the Evidence
+
+Every determination should preserve **why** the relationship was assigned.
+
+Example:
+
+```json
+{
+  "evidence": [
+    {
+      "type": "immutable_identifier_match",
+      "field": "source_record_id",
+      "record_a_value": "ABC-123",
+      "record_b_value": "ABC-123",
+      "weight": "deterministic"
+    },
+    {
+      "type": "content_hash_match",
+      "weight": "deterministic"
+    }
+  ]
+}
+```
+
+Negative evidence should also be retained:
+
+```json
+{
+  "contradictory_evidence": [
+    {
+      "type": "observation_time_difference",
+      "value": "03:17:22"
+    }
+  ]
+}
+```
+
+---
+
+# 21. Step 17 — Create the Relationship Graph
+
+The result should preferably become a persistent relationship rather than disappear into a deduplication log.
+
+Example:
+
+```text
+                 ┌───────────────┐
+                 │   Subject S   │
+                 └───────┬───────┘
+                         │
+              ┌──────────┴──────────┐
+              │                     │
+        same_subject           same_subject
+              │                     │
+        ┌─────▼─────┐         ┌─────▼─────┐
+        │ Record A  │         │ Record B  │
+        └─────┬─────┘         └─────┬─────┘
+              │                     │
+       observation O1        observation O2
+              │                     │
+              └──────┬──────┬──────┘
+                     │      │
+               independent  │
+                observations│
+                     │      │
+                  corroborates
+                     │
+                     ▼
+```
+
+This permits the system to retain information without treating every relationship as duplication.
+
+---
+
+# 22. Decision Matrix
+
+A useful initial decision matrix is:
+
+| Same subject | Same event | Same observation | Same provenance           | Result                                    |
+| ------------ | ---------- | ---------------- | ------------------------- | ----------------------------------------- |
+| No           | No         | No               | No                        | Unrelated/related                         |
+| Yes          | No         | No               | No                        | Subject match                             |
+| Yes          | Yes        | No               | No                        | Independent observations or event-related |
+| Yes          | Yes        | Yes              | Yes                       | Likely duplicate                          |
+| Yes          | Yes        | Yes              | No                        | Investigate independent observation       |
+| Yes          | Yes        | Yes              | Copy lineage              | Record/observation duplicate              |
+| Yes          | No         | No               | Copy lineage              | Possible copied record                    |
+| Yes          | Yes        | No               | Independent sources       | Corroboration                             |
+| Yes          | Yes        | No               | Independent + conflicting | Conflict                                  |
+| Yes          | Yes        | Yes              | Unknown                   | Review                                    |
+
+---
+
+# 23. Hard Safety Rules Against False Deduplication
+
+The RRD engine should implement explicit safeguards.
+
+### Rule 1
+
+**Never declare duplication solely because subject identifiers match.**
+
+### Rule 2
+
+**Never declare duplication solely because timestamps match.**
+
+### Rule 3
+
+**Never declare duplication solely because locations match.**
+
+### Rule 4
+
+**Never declare duplication solely because content is similar.**
+
+### Rule 5
+
+**Independent provenance is evidence against simple deduplication.**
+
+### Rule 6
+
+**Different observation times may indicate legitimate temporal records.**
+
+### Rule 7
+
+**Conflicting records should not automatically be merged.**
+
+### Rule 8
+
+**Derived and aggregate records must not be mistaken for duplicates of their source records.**
+
+### Rule 9
+
+**A later record does not automatically make an earlier record a duplicate; it may supersede it.**
+
+### Rule 10
+
+**When evidence cannot distinguish duplication from legitimate independence, retain the records and classify the relationship as indeterminate or send for review.**
+
+---
+
+# 24. Minimal Machine-Readable RRD Object
+
+```json
+{
+  "rrd_id": "RRD-...",
+  "records": [
+    "record-A",
+    "record-B"
+  ],
+
+  "identities": {
+    "record": "possible_same_record",
+    "subject": "same_subject",
+    "event": "same_event",
+    "observation": "indeterminate"
+  },
+
+  "comparisons": {
+    "provenance": "independent_sources",
+    "temporal": "same_time",
+    "spatial": "same_location",
+    "entities": "high_overlap",
+    "content": "semantically_equivalent"
+  },
+
+  "independence": {
+    "status": "likely_independent",
+    "confidence": 0.91
+  },
+
+  "relationship": {
+    "type": "INDEPENDENT_OBSERVATION",
+    "confidence": 0.89
+  },
+
+  "deduplication": {
+    "eligible": false,
+    "reason": "Independent observations should be retained."
+  },
+
+  "recommended_action": "RETAIN_SEPARATELY",
+
+  "evidence": [],
+  "unresolved_questions": [],
+  "review_required": false
+}
+```
+
+---
+
+# 25. Procedural Summary
+
+The complete RRD sequence is therefore:
+
+```text
+1. Define record boundaries
+        ↓
+2. Establish record identity
+        ↓
+3. Establish subject identity
+        ↓
+4. Establish event identity
+        ↓
+5. Establish observation identity
+        ↓
+6. Trace provenance
+        ↓
+7. Compare temporal dimensions
+        ↓
+8. Compare spatial dimensions
+        ↓
+9. Compare referenced entities
+        ↓
+10. Compare substantive content
+        ↓
+11. Determine independence / replication / derivation
+        ↓
+12. Classify relationship
+        ↓
+13. Determine deduplication eligibility
+        ↓
+14. Recommend action
+        ↓
+15. Assign confidence
+        ↓
+16. Preserve evidence
+        ↓
+17. Persist relationship in relationship graph
+```
+
+## Position in the larger Records Deduplication Suite
+
+This gives us a useful architectural separation:
+
+```text
+RECORD INGESTION
+      ↓
+NORMALIZATION
+      ↓
+CANDIDATE GENERATION
+      ↓
+RECORD RELATIONSHIP DETERMINATION
+      ↓
+┌───────────────────────────────────────┐
+│                                       │
+│ duplicate?       related?             │
+│    ↓                 ↓                │
+│ deduplication    relationship         │
+│ procedure        preservation         │
+│    ↓                 ↓                │
+└──────────────┬────────────────────────┘
+               ↓
+        RECONCILIATION
+               ↓
+       PROVENANCE GRAPH
+               ↓
+          AUDIT / REVIEW
+```
+
+The particularly important architectural result is that **deduplication becomes an action downstream of relationship determination rather than the definition of the relationship itself**. This should substantially reduce false-positive deduplication in systems where multiple lower-level nodes independently observe the same subjects.
