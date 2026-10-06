@@ -1,0 +1,616 @@
+A **Deduplication of Records Suite** - Rather than a single deduplication algorithm:
+The core idea is to determine whether two or more records represent the **same underlying event, entity, observation, transaction, document, or other recordable fact**, while preserving provenance and uncertainty.
+
+I suggest we build it in this order:
+
+1. **Framework / conceptual model**
+2. **Procedural checklist**
+3. **Deduplication decision hierarchy**
+4. **Evidence and similarity model**
+5. **Record clustering / candidate generation**
+6. **Merge, retain, reject, and uncertain-match procedures**
+7. **Provenance and audit requirements**
+8. **Edge-case handling**
+9. **Code/data structures**
+10. **Executable algorithms and tests**
+
+## 1. Deduplication of Records Suite — Framework
+
+### A. Primary objective
+
+> Determine whether multiple records should be treated as representations of the same underlying recordable object, occurrence, relationship, or fact, and, where appropriate, consolidate them without destroying source information or provenance.
+
+The suite should distinguish:
+
+* **Exact duplicate** — materially identical record.
+* **Near duplicate** — same underlying record with minor differences.
+* **Republished duplicate** — same information reproduced by another source.
+* **Version** — same record, but legitimately updated.
+* **Correction** — replacement/correction of an earlier record.
+* **Supplement** — additional information about the same underlying record.
+* **Related record** — genuinely distinct record linked to the same entities/event.
+* **Coincidental match** — similar attributes but different underlying record.
+* **Unresolved candidate** — insufficient evidence to decide.
+
+This distinction is important because **deduplication must not accidentally erase legitimate temporal versions or related records**.
+
+---
+
+# 2. Record Identity Model
+
+A record should be evaluated against a multidimensional identity profile.
+
+### Core dimensions
+
+```text
+Record
+├── record_identity
+│   ├── source_record_id
+│   ├── source_system
+│   ├── record_type
+│   └── canonical_record_id
+│
+├── temporal_identity
+│   ├── event_timestamp
+│   ├── observed_timestamp
+│   ├── created_timestamp
+│   ├── modified_timestamp
+│   ├── published_timestamp
+│   └── effective_period
+│
+├── spatial_identity
+│   ├── coordinates
+│   ├── address
+│   ├── place
+│   ├── administrative_area
+│   └── spatial_reference
+│
+├── entity_identity
+│   ├── persons
+│   ├── organizations
+│   ├── objects
+│   ├── vehicles
+│   ├── properties
+│   ├── devices
+│   └── other entities
+│
+├── semantic_identity
+│   ├── event_type
+│   ├── action
+│   ├── subject
+│   ├── object
+│   ├── attributes
+│   └── relationships
+│
+├── documentary_identity
+│   ├── title
+│   ├── document_number
+│   ├── URI/URL
+│   ├── hash
+│   ├── filename
+│   └── source
+│
+└── provenance
+    ├── originating_source
+    ├── collection_method
+    ├── source_timestamp
+    ├── transformations
+    └── confidence
+```
+
+---
+
+# 3. Evidence Hierarchy
+
+Not all matching evidence should have equal weight.
+
+A useful initial hierarchy is:
+
+### Tier 1 — Direct identifiers
+
+Strongest evidence:
+
+* canonical record ID
+* source record ID
+* transaction ID
+* document ID
+* case number
+* serial number
+* accession number
+* UUID
+* globally unique identifier
+* cryptographic content hash
+
+A matching immutable identifier can potentially establish identity by itself.
+
+### Tier 2 — Cryptographic/content identity
+
+Examples:
+
+* identical file hash
+* identical normalized document hash
+* identical canonical JSON hash
+* identical image perceptual hash
+* identical structured-record hash
+
+### Tier 3 — Strong composite identity
+
+Combination of:
+
+* same entities
+* same event type
+* same timestamp
+* same location
+* same unique attributes
+
+### Tier 4 — Strong contextual identity
+
+Examples:
+
+* same entities
+* same location
+* nearly identical timestamps
+* same event description
+* same source chain
+
+### Tier 5 — Weak similarity
+
+Examples:
+
+* similar title
+* similar text
+* same general location
+* same organization
+* same date
+
+Weak evidence should generate **candidates**, not automatically trigger merging.
+
+---
+
+# 4. Timestamp-Based Deduplication
+
+The suite should never treat timestamps as simply "equal/not equal."
+
+Instead, represent:
+
+```text
+timestamp_relationship
+
+EXACT
+WITHIN_TOLERANCE
+SAME_TIME_WINDOW
+SEQUENTIALLY_RELATED
+CONFLICTING
+UNKNOWN
+```
+
+For example:
+
+```json
+{
+  "timestamp_comparison": {
+    "record_a": "2026-10-06T12:00:00Z",
+    "record_b": "2026-10-06T12:00:03Z",
+    "difference_seconds": 3,
+    "relationship": "WITHIN_TOLERANCE",
+    "tolerance_seconds": 10
+  }
+}
+```
+
+Different record types should have different tolerances.
+
+For example:
+
+```text
+instantaneous sensor event       ±1 second
+financial transaction            ±seconds/minutes
+meeting                          ±minutes
+government filing               same effective date
+historical event                 ±days/months
+document publication             potentially exact date only
+```
+
+The tolerance should therefore be a **configuration**, not hard-coded logic.
+
+---
+
+# 5. Location-Based Deduplication
+
+Location should similarly be normalized before comparison.
+
+Possible relationships:
+
+```text
+EXACT_COORDINATE
+WITHIN_RADIUS
+SAME_ADDRESS
+SAME_PROPERTY
+SAME_BUILDING
+SAME_CITY
+SAME_ADMINISTRATIVE_AREA
+SAME_REGION
+UNKNOWN
+CONFLICTING
+```
+
+For coordinates:
+
+```text
+distance(A, B) <= configured_threshold
+```
+
+But location precision matters.
+
+A record saying:
+
+```text
+44.0805, -106.9620
+```
+
+should not necessarily be treated the same as:
+
+```text
+Sheridan, Wyoming
+```
+
+because the latter has much lower spatial precision.
+
+---
+
+# 6. Entity-Based Matching
+
+Entity references should be normalized into canonical entity records where possible.
+
+For example:
+
+```text
+"IBM"
+"International Business Machines"
+"International Business Machines Corporation"
+```
+
+may resolve to one organization entity.
+
+Similarly:
+
+```text
+vehicle VIN
+person identifier
+organization identifier
+property identifier
+device identifier
+account identifier
+document identifier
+```
+
+can provide extremely strong linkage.
+
+Entity matching should produce:
+
+```json
+{
+  "entity_match": {
+    "entity_type": "organization",
+    "entity_a": "…",
+    "entity_b": "…",
+    "relationship": "SAME_ENTITY",
+    "confidence": 0.99,
+    "basis": [
+      "canonical_identifier",
+      "normalized_name"
+    ]
+  }
+}
+```
+
+---
+
+# 7. Candidate Generation
+
+Do **not** compare every record against every other record.
+
+Instead:
+
+```text
+all records
+    ↓
+normalization
+    ↓
+blocking/indexing
+    ↓
+candidate pairs
+    ↓
+comparison
+    ↓
+scoring
+    ↓
+classification
+```
+
+Possible blocking keys:
+
+```text
+record type
+date bucket
+location bucket
+entity identifier
+source system
+document number
+organization
+event type
+```
+
+For example:
+
+```text
+BLOCK:
+    event_type = "vehicle_registration"
+    year = 2026
+    jurisdiction = "WY"
+```
+
+Then perform detailed comparison only inside the block.
+
+---
+
+# 8. Similarity / Evidence Score
+
+The suite can produce an explainable score:
+
+```text
+D =
+
+  identifier_match
++ timestamp_similarity
++ location_similarity
++ entity_similarity
++ semantic_similarity
++ document_similarity
++ source_relationship
+- contradiction_penalties
+```
+
+But I recommend **not relying solely on one numerical score**.
+
+Instead:
+
+```json
+{
+  "deduplication_assessment": {
+    "classification": "LIKELY_DUPLICATE",
+    "confidence": 0.94,
+    "evidence": [
+      {
+        "dimension": "entity",
+        "result": "SAME_ENTITY",
+        "weight": 0.30
+      },
+      {
+        "dimension": "timestamp",
+        "result": "WITHIN_TOLERANCE",
+        "weight": 0.25
+      },
+      {
+        "dimension": "location",
+        "result": "SAME_PROPERTY",
+        "weight": 0.25
+      },
+      {
+        "dimension": "content",
+        "result": "HIGH_SIMILARITY",
+        "weight": 0.20
+      }
+    ]
+  }
+}
+```
+
+That makes the decision auditable.
+
+---
+
+# 9. Decision Classes
+
+I'd establish these as the canonical output states:
+
+```text
+DUPLICATE
+LIKELY_DUPLICATE
+POSSIBLE_DUPLICATE
+UNRESOLVED
+LIKELY_DISTINCT
+DISTINCT
+VERSION_OF
+CORRECTION_OF
+SUPPLEMENT_OF
+RELATED_TO
+```
+
+This is better than a binary:
+
+```text
+duplicate = true/false
+```
+
+because real records frequently contain ambiguity.
+
+---
+
+# 10. Merge Policy
+
+**Never destroy source records during deduplication.**
+
+Instead:
+
+```text
+Record A ─┐
+          ├── canonical_record_cluster
+Record B ─┤
+          └── Record C
+```
+
+The system creates a canonical cluster:
+
+```json
+{
+  "canonical_record_cluster_id": "…",
+  "members": [
+    "record-A",
+    "record-B",
+    "record-C"
+  ],
+  "canonicalization_status": "MERGED",
+  "source_records_retained": true
+}
+```
+
+The canonical representation can then contain:
+
+```text
+canonical values
++
+all source values
++
+conflicting values
++
+provenance
++
+resolution decisions
+```
+
+---
+
+# 11. Procedural Checklist
+
+## Phase 1 — Intake
+
+* [ ] Assign internal record identifier.
+* [ ] Preserve original source record.
+* [ ] Identify source system.
+* [ ] Identify record type.
+* [ ] Record ingestion timestamp.
+* [ ] Calculate content/document hash where applicable.
+* [ ] Preserve original timestamps.
+* [ ] Preserve original location representation.
+* [ ] Preserve original entity references.
+
+## Phase 2 — Normalize
+
+* [ ] Normalize identifiers.
+* [ ] Normalize names.
+* [ ] Normalize organizations.
+* [ ] Normalize dates/times.
+* [ ] Normalize time zones.
+* [ ] Normalize locations.
+* [ ] Normalize addresses.
+* [ ] Normalize units.
+* [ ] Normalize record types.
+* [ ] Normalize event/action terminology.
+* [ ] Normalize document identifiers.
+* [ ] Preserve original forms alongside normalized forms.
+
+## Phase 3 — Candidate Generation
+
+* [ ] Select blocking keys.
+* [ ] Retrieve potentially matching records.
+* [ ] Exclude impossible comparisons.
+* [ ] Generate candidate pairs/groups.
+* [ ] Record why each candidate was generated.
+
+## Phase 4 — Compare
+
+For each candidate:
+
+* [ ] Compare direct identifiers.
+* [ ] Compare timestamps.
+* [ ] Compare temporal windows.
+* [ ] Compare locations.
+* [ ] Compare entities.
+* [ ] Compare event/action.
+* [ ] Compare document identifiers.
+* [ ] Compare textual content.
+* [ ] Compare structured attributes.
+* [ ] Compare source relationships.
+* [ ] Identify contradictions.
+* [ ] Identify missing information.
+
+## Phase 5 — Assess
+
+* [ ] Calculate evidence.
+* [ ] Calculate confidence.
+* [ ] Identify strongest evidence.
+* [ ] Identify contradictory evidence.
+* [ ] Determine classification.
+* [ ] Determine whether human review is required.
+
+## Phase 6 — Resolve
+
+* [ ] Mark exact duplicates.
+* [ ] Cluster near duplicates.
+* [ ] Preserve legitimate versions.
+* [ ] Preserve corrections.
+* [ ] Preserve supplements.
+* [ ] Link related records.
+* [ ] Leave uncertain cases unresolved.
+
+## Phase 7 — Canonicalize
+
+* [ ] Create canonical record/cluster.
+* [ ] Select canonical values.
+* [ ] Preserve alternate values.
+* [ ] Preserve conflicting values.
+* [ ] Preserve source provenance.
+* [ ] Record resolution rules.
+* [ ] Record confidence.
+
+## Phase 8 — Audit
+
+* [ ] Record every decision.
+* [ ] Record algorithm/version.
+* [ ] Record matching rules.
+* [ ] Record inputs.
+* [ ] Record evidence.
+* [ ] Record reviewer where applicable.
+* [ ] Make the operation reproducible.
+* [ ] Do not overwrite source records.
+
+---
+
+# 12. Critical Rule
+
+The central procedural rule I'd put at the top of the suite is:
+
+> **Similarity is evidence of possible identity, not identity itself.**
+
+And the second:
+
+> **Deduplication consolidates representations; it does not erase provenance.**
+
+That gives us a strong foundation for the code structures you're proposing next.
+
+### Proposed next development
+
+When we move into the code structures, I recommend producing the suite as a set of discrete IRs/modules:
+
+```text
+DeduplicationRecordIR
+DeduplicationCandidateIR
+RecordComparisonIR
+TemporalComparisonIR
+SpatialComparisonIR
+EntityComparisonIR
+SemanticComparisonIR
+EvidenceIR
+DeduplicationAssessmentIR
+RecordClusterIR
+CanonicalRecordIR
+MergeDecisionIR
+ConflictIR
+ResolutionIR
+DeduplicationAuditIR
+DeduplicationRuleIR
+DeduplicationConfigurationIR
+```
+
+These are composable with broader **Records Library / Identity Records / Properties / Vehicles / Organizations / Health Records / Tax Records** architectures.
