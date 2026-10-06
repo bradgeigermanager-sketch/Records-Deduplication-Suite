@@ -1,0 +1,20 @@
+**`DeduplicationRecordIR`** — the foundational record representation that the candidate, comparison, temporal, spatial, entity, evidence, and audit IRs can all reference.
+
+I’d structure that IR around:
+
+* source/original record identity
+* record type and subtype
+* source-system identity
+* timestamps and temporal semantics
+* locations and spatial precision
+* referenced entities
+* semantic/event attributes
+* documentary/content identity
+* hashes and fingerprints
+* provenance
+* normalization state
+* deduplication metadata
+* uncertainty/missingness
+* links to candidate/cluster/assessment records
+
+That will give us a stable primitive before we start defining the actual comparison and scoring structures.
