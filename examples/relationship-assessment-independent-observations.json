@@ -1,0 +1,29 @@
+{
+  "assessment_id": "RRD-ASSESS-001",
+  "record_a_id": "rec-A",
+  "record_b_id": "rec-B",
+  "relationship_type": "INDEPENDENT_OBSERVATION",
+  "deduplication_eligibility": "NOT_ELIGIBLE",
+  "recommended_action": "RETAIN_SEPARATELY",
+  "confidence": 0.98,
+  "evidence": [
+    {
+      "evidence_type": "distinct_observation_times",
+      "description": "The records report observations at different times.",
+      "direction": "SUPPORTS",
+      "source_record_ids": ["rec-A", "rec-B"],
+      "limitations": ["Different times alone do not prove independent provenance."]
+    },
+    {
+      "evidence_type": "distinct_source_nodes",
+      "description": "Each record identifies a different recording node.",
+      "direction": "SUPPORTS",
+      "source_record_ids": ["rec-A", "rec-B"],
+      "limitations": ["Source independence should be verified where material."]
+    }
+  ],
+  "rationale": "The records concern the same subject but represent separate observations. Preserve both records and their provenance.",
+  "review_required": false,
+  "rule_version": "RRD-1.0.0",
+  "assessed_at": "2026-10-26T00:00:00Z"
+}
