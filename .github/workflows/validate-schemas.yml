@@ -50,8 +50,20 @@ jobs:
           example = json.loads(
               Path("examples/relationship-assessment-independent-observations.json").read_text(encoding="utf-8")
           )
-          Draft202012Validator(
+          validator = Draft202012Validator(
               assessment_schema, format_checker=FormatChecker()
-          ).validate(example)
+          )
+          validator.validate(example)
           print("Assessment example valid.")
+
+          invalid_example = dict(example)
+          invalid_example["deduplication_eligibility"] = "ELIGIBLE"
+          try:
+              validator.validate(invalid_example)
+          except Exception:
+              print("Invalid independent-observation assessment rejected.")
+          else:
+              raise AssertionError(
+                  "Independent observations must not be marked eligible for deduplication."
+              )
           PY
