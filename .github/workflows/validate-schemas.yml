@@ -56,14 +56,16 @@ jobs:
           validator.validate(example)
           print("Assessment example valid.")
 
-          invalid_example = dict(example)
-          invalid_example["deduplication_eligibility"] = "ELIGIBLE"
-          try:
-              validator.validate(invalid_example)
-          except Exception:
-              print("Invalid independent-observation assessment rejected.")
-          else:
-              raise AssertionError(
-                  "Independent observations must not be marked eligible for deduplication."
-              )
+          invalid_cases = [
+              ("unsafe eligibility", {**example, "deduplication_eligibility": "ELIGIBLE"}),
+              ("missing rationale", {k: v for k, v in example.items() if k != "rationale"}),
+              ("confidence out of range", {**example, "confidence": 1.5}),
+          ]
+          for case_name, invalid_case in invalid_cases:
+              try:
+                  validator.validate(invalid_case)
+              except Exception:
+                  print(f"Invalid case rejected: {case_name}")
+              else:
+                  raise AssertionError(f"Invalid case unexpectedly passed: {case_name}")
           PY
