@@ -116,3 +116,10 @@ These are potential integration points to evaluate, not established dependencies
 - [Data-Types-and-Templates-Library](https://github.com/bradgeigermanager-sketch/Data-Types-and-Templates-Library) and [Forms-and-Templates-Library](https://github.com/bradgeigermanager-sketch/Forms-and-Templates-Library) — candidate homes for shared schema and form templates.
 
 Integrations should be established through explicit versioned contracts and reviewed links, rather than inferred from repository names alone.
+
+
+## Draft machine-readable artifacts
+
+- [DeduplicationRecordIR JSON Schema](schemas/deduplication-record-ir.schema.json) — initial structural contract; external validation is pending.
+- [Relationship taxonomy](docs/relationship-taxonomy-v1.md) — relationship codes and default merge eligibility rules.
+- [Independent observations example](examples/independent-observations.json) — illustrates why shared subject identity does not establish duplicate observations.
