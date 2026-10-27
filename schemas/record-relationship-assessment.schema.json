@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bradgeigermanager-sketch.github.io/Records-Deduplication-Suite/schemas/record-relationship-assessment.schema.json",
+  "title": "RecordRelationshipAssessment",
+  "description": "A relationship assessment that separates identity findings, evidence, deduplication eligibility, and action.",
+  "type": "object",
+  "required": ["assessment_id", "record_a_id", "record_b_id", "relationship_type", "deduplication_eligibility", "recommended_action", "evidence", "rationale"],
+  "properties": {
+    "assessment_id": {"type": "string", "minLength": 1},
+    "record_a_id": {"type": "string", "minLength": 1},
+    "record_b_id": {"type": "string", "minLength": 1, "not": {"const": ""}},
+    "relationship_type": {
+      "enum": ["EXACT_DUPLICATE", "RECORD_DUPLICATE", "OBSERVATION_DUPLICATE", "COPIED_FROM", "TRANSFORMED_FROM", "DERIVED_FROM", "AGGREGATE_OF", "VERSION_OF", "CORRECTION_OF", "SUPERSEDES", "SUPPLEMENT_OF", "SAME_SUBJECT", "SAME_EVENT", "INDEPENDENT_OBSERVATION", "CORROBORATES", "CONFLICTS_WITH", "PARTIAL_OVERLAP", "COMPLEMENTARY", "RELATED_TO", "UNRELATED", "INDETERMINATE"]
+    },
+    "deduplication_eligibility": {"enum": ["ELIGIBLE", "NOT_ELIGIBLE", "REVIEW_REQUIRED", "UNDETERMINED"]},
+    "recommended_action": {"enum": ["RETAIN_SEPARATELY", "LINK_ONLY", "CREATE_VERSION_LINK", "CREATE_CORRECTION_LINK", "SUPPLEMENT_CANONICAL", "MERGE_WITH_PROVENANCE", "ESCALATE_FOR_REVIEW", "NO_ACTION", "DEFER"]},
+    "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["evidence_type", "description", "direction"],
+        "properties": {
+          "evidence_type": {"type": "string", "minLength": 1},
+          "description": {"type": "string", "minLength": 1},
+          "direction": {"enum": ["SUPPORTS", "CONTRADICTS", "NEUTRAL", "UNKNOWN"]},
+          "source_record_ids": {"type": "array", "items": {"type": "string"}},
+          "limitations": {"type": "array", "items": {"type": "string"}}
+        },
+        "additionalProperties": false
+      }
+    },
+    "rationale": {"type": "string", "minLength": 1},
+    "review_required": {"type": "boolean"},
+    "rule_version": {"type": ["string", "null"]},
+    "assessed_at": {"type": ["string", "null"], "format": "date-time"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"relationship_type": {"enum": ["INDEPENDENT_OBSERVATION", "CORROBORATES", "CONFLICTS_WITH", "SAME_SUBJECT", "SAME_EVENT", "VERSION_OF", "CORRECTION_OF", "SUPPLEMENT_OF", "RELATED_TO", "INDETERMINATE"]}, "required": ["relationship_type"]},
+      "then": {"properties": {"deduplication_eligibility": {"not": {"const": "ELIGIBLE"}}}}
+    }
+  ],
+  "additionalProperties": false
+}
