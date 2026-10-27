@@ -661,63 +661,73 @@ The last case is especially important:
 
 Apply the accumulated evidence to the relationship taxonomy.
 
-Recommended relationship types:
-
-| Code                      | Relationship                                                   |
-| ------------------------- | -------------------------------------------------------------- |
-| `EXACT_DUPLICATE`         | Same recording/content                                         |
-| `RECORD_DUPLICATE`        | Same underlying record represented multiple times              |
-| `OBSERVATION_DUPLICATE`   | Same observation recorded multiple times                       |
-| `SUBJECT_MATCH`           | Same subject, different record/observation                     |
-| `EVENT_MATCH`             | Same event, potentially different observations                 |
-| `INDEPENDENT_OBSERVATION` | Independent observations of same subject/event                 |
-| `CORROBORATES`            | Independent record supports another                            |
-| `CONFLICTS_WITH`          | Records make conflicting assertions                            |
-| `PARTIAL_OVERLAP`         | Some content overlaps                                          |
-| `COMPLEMENTARY`           | Records provide different information about same matter        |
-| `SUPERSEDES`              | One record replaces a prior record                             |
-| `DERIVED_FROM`            | One record was derived from another                            |
-| `AGGREGATE_OF`            | One record summarizes multiple records                         |
-| `COPIED_FROM`             | One record is a reproduction                                   |
-| `TRANSFORMED_FROM`        | One representation derives through transformation              |
-| `RELATED`                 | Meaningfully related but relationship not otherwise classified |
-| `UNRELATED`               | No meaningful relationship                                     |
-| `INDETERMINATE`           | Evidence insufficient                                          |
-
----
-
-# 17. Step 13 — Determine Deduplication Eligibility
-
-The relationship classification feeds a separate decision.
-
-### Generally eligible
+Use the controlled codes in [relationship taxonomy v1](docs/relationship-taxonomy-v1.md). The primary codes include:
 
 ```text
 EXACT_DUPLICATE
 RECORD_DUPLICATE
 OBSERVATION_DUPLICATE
 COPIED_FROM
-```
-
-subject to provenance and retention rules.
-
-### Generally not eligible merely from relationship
-
-```text
-SUBJECT_MATCH
-EVENT_MATCH
-INDEPENDENT_OBSERVATION
-CORROBORATES
-COMPLEMENTARY
-CONFLICTS_WITH
-PARTIAL_OVERLAP
+TRANSFORMED_FROM
 DERIVED_FROM
 AGGREGATE_OF
+VERSION_OF
+CORRECTION_OF
 SUPERSEDES
+SUPPLEMENT_OF
+SAME_SUBJECT
+SAME_EVENT
+INDEPENDENT_OBSERVATION
+CORROBORATES
+CONFLICTS_WITH
+PARTIAL_OVERLAP
+COMPLEMENTARY
+RELATED_TO
+UNRELATED
+INDETERMINATE
 ```
 
-These relationships normally require **retention and linkage**, rather than deletion or merging.
+Do not use near-synonyms such as `SUBJECT_MATCH`, `EVENT_MATCH`, or `RELATED` in machine output. Report record, subject, observation, and event identity dimensions separately from the relationship code.
+---
 
+# 17. Step 13 — Determine Deduplication Eligibility
+
+The relationship classification feeds a separate decision.
+
+### Potential duplicate candidates — evidence and policy review required
+
+```text
+EXACT_DUPLICATE
+RECORD_DUPLICATE
+OBSERVATION_DUPLICATE
+```
+
+These codes do not automatically authorize a merge. Confirm record/observation identity, provenance, retention rules, and any independent-generation pathway before consolidation.
+
+### Not eligible from relationship alone
+
+```text
+COPIED_FROM
+TRANSFORMED_FROM
+DERIVED_FROM
+AGGREGATE_OF
+VERSION_OF
+CORRECTION_OF
+SUPERSEDES
+SUPPLEMENT_OF
+SAME_SUBJECT
+SAME_EVENT
+INDEPENDENT_OBSERVATION
+CORROBORATES
+CONFLICTS_WITH
+PARTIAL_OVERLAP
+COMPLEMENTARY
+RELATED_TO
+UNRELATED
+INDETERMINATE
+```
+
+Use links, version/correction relationships, separate retention, or review as appropriate. A copied representation can be a duplicate candidate only after the underlying record boundary and source lineage are established; the `COPIED_FROM` relationship itself does not authorize consolidation.
 ---
 
 # 18. Step 14 — Select the Recommended Action
@@ -726,21 +736,21 @@ The RRD procedure should not itself necessarily delete or merge anything.
 
 It should recommend an action:
 
+Use the action codes defined by the [relationship decision table v1](docs/relationship-decision-table-v1.md) and assessment schema:
+
 ```text
 RETAIN_SEPARATELY
-MARK_AS_DUPLICATE
-MERGE
-LINK_AS_SAME_SUBJECT
-LINK_AS_SAME_EVENT
-LINK_AS_CORROBORATION
-LINK_AS_CONFLICT
-LINK_AS_DERIVED
-LINK_AS_AGGREGATE
-MARK_AS_SUPERSEDED
-SEND_TO_REVIEW
-DEFER
+LINK_ONLY
+CREATE_VERSION_LINK
+CREATE_CORRECTION_LINK
+SUPPLEMENT_CANONICAL
+MERGE_WITH_PROVENANCE
+ESCALATE_FOR_REVIEW
 NO_ACTION
+DEFER
 ```
+
+A relationship label must never directly trigger destructive merge/deletion. Actual consolidation is a separate, authorized, auditable stage.
 
 This separation is important:
 
