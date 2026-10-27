@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0.0",
+  "record_id": "record-synthetic-001",
+  "record_type": "observation",
+  "source": {
+    "source_system": "synthetic-test-system",
+    "source_record_id": "source-record-001",
+    "source_uri": null,
+    "source_node_id": "test-node-a",
+    "source_revision": "1",
+    "source_content_hash": "sha256:synthetic-placeholder"
+  },
+  "content": {
+    "representation": "text",
+    "text": "Synthetic test observation: sensor A observed object X at a stated time.",
+    "structured_data": null,
+    "content_hash": null,
+    "media_type": "text/plain"
+  },
+  "timestamps": [
+    {
+      "kind": "observation",
+      "value": "2026-10-01T09:00:00Z",
+      "original_value": "2026-10-01 09:00 UTC",
+      "timezone_basis": "UTC",
+      "precision": "minute"
+    }
+  ],
+  "locations": [],
+  "entities": [
+    {
+      "entity_type": "test_object",
+      "entity_id": "object-X",
+      "source_identifier": "object-X",
+      "name_as_recorded": "Object X",
+      "role": "observed_subject"
+    }
+  ],
+  "attributes": {
+    "synthetic": true
+  },
+  "relationships": [],
+  "created_at": "2026-10-01T09:01:00Z",
+  "provenance": {
+    "acquisition_method": "synthetic_fixture",
+    "originating_source": "test-data",
+    "collected_by": "automated-test",
+    "recorded_at": "2026-10-01T09:01:00Z",
+    "transformations": [],
+    "source_references": []
+  },
+  "normalization": {
+    "status": "not_started",
+    "method_version": null,
+    "normalized_fields": [],
+    "original_values_preserved": true,
+    "notes": ["Synthetic fixture; not a real-world record."]
+  },
+  "uncertainty": {
+    "missing_fields": [],
+    "known_limitations": ["All identifiers and content are synthetic."],
+    "quality_flags": ["synthetic_test_data"]
+  },
+  "tags": ["synthetic", "test"]
+}
