@@ -44,6 +44,26 @@ jobs:
               Draft202012Validator.check_schema(schema)
               print(f"Schema valid: {path}")
 
+          record_schema = json.loads(
+              Path("schemas/deduplication-record-ir.schema.json").read_text(encoding="utf-8")
+          )
+          record_example = json.loads(
+              Path("examples/deduplication-record-valid.json").read_text(encoding="utf-8")
+          )
+          record_validator = Draft202012Validator(record_schema, format_checker=FormatChecker())
+          record_validator.validate(record_example)
+          print("DeduplicationRecordIR example valid.")
+
+          invalid_record = {**record_example, "normalization": {
+              **record_example["normalization"], "original_values_preserved": False
+          }}
+          try:
+              record_validator.validate(invalid_record)
+          except Exception:
+              print("Invalid record rejected: original values not preserved.")
+          else:
+              raise AssertionError("Record schema must reject overwritten original values.")
+
           assessment_schema = json.loads(
               Path("schemas/record-relationship-assessment.schema.json").read_text(encoding="utf-8")
           )
