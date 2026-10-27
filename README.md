@@ -123,3 +123,7 @@ Integrations should be established through explicit versioned contracts and revi
 - [DeduplicationRecordIR JSON Schema](schemas/deduplication-record-ir.schema.json) — initial structural contract; external validation is pending.
 - [Relationship taxonomy](docs/relationship-taxonomy-v1.md) — relationship codes and default merge eligibility rules.
 - [Independent observations example](examples/independent-observations.json) — illustrates why shared subject identity does not establish duplicate observations.
+
+- [Relationship assessment JSON Schema](schemas/record-relationship-assessment.schema.json) — draft contract for evidence-backed pairwise relationship assessments.
+- [Independent-observation assessment example](examples/relationship-assessment-independent-observations.json) — example assessment intended to retain two independent observations separately.
+- [Schema validation workflow](.github/workflows/validate-schemas.yml) — checks Draft 2020-12 schemas and validates the assessment example on relevant changes.
