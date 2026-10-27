@@ -1,0 +1,29 @@
+{
+  "case_id": "RRD-EX-001",
+  "purpose": "Demonstrate that two records about the same subject are not automatically duplicates.",
+  "record_a": {
+    "record_id": "rec-A",
+    "subject_id": "subject-42",
+    "observation_time": "2026-10-01T09:00:00Z",
+    "source_node": "node-A",
+    "content": "Sensor A observed subject-42 at 09:00Z."
+  },
+  "record_b": {
+    "record_id": "rec-B",
+    "subject_id": "subject-42",
+    "observation_time": "2026-10-01T09:05:00Z",
+    "source_node": "node-B",
+    "content": "Sensor B independently observed subject-42 at 09:05Z."
+  },
+  "expected_assessment": {
+    "record_identity_relation": "distinct_records",
+    "subject_identity_relation": "same_subject",
+    "observation_identity_relation": "different_observations",
+    "provenance_relation": "independent_observation",
+    "relationship_type": "INDEPENDENT_OBSERVATION",
+    "deduplication_eligibility": "not_eligible_from_subject_match_alone",
+    "recommended_action": "RETAIN_SEPARATELY",
+    "review_required": false
+  },
+  "rationale": "Shared subject identity does not establish shared record or observation identity. The two records may corroborate one another and must retain independent provenance."
+}
