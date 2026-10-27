@@ -127,3 +127,5 @@ Integrations should be established through explicit versioned contracts and revi
 - [Relationship assessment JSON Schema](schemas/record-relationship-assessment.schema.json) — draft contract for evidence-backed pairwise relationship assessments.
 - [Independent-observation assessment example](examples/relationship-assessment-independent-observations.json) — example assessment intended to retain two independent observations separately.
 - [Schema validation workflow](.github/workflows/validate-schemas.yml) — checks Draft 2020-12 schemas and validates the assessment example on relevant changes.
+
+- [Relationship decision table v1](docs/relationship-decision-table-v1.md) — conservative default actions separating relationship labels from deduplication eligibility.
