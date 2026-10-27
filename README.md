@@ -129,3 +129,5 @@ Integrations should be established through explicit versioned contracts and revi
 - [Schema validation workflow](.github/workflows/validate-schemas.yml) — checks Draft 2020-12 schemas and validates the assessment example on relevant changes.
 
 - [Relationship decision table v1](docs/relationship-decision-table-v1.md) — conservative default actions separating relationship labels from deduplication eligibility.
+
+- [Valid DeduplicationRecordIR fixture](examples/deduplication-record-valid.json) — synthetic record fixture for schema validation; contains no real-world record data.
