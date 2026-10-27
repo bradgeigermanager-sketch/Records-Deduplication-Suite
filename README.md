@@ -120,7 +120,7 @@ Integrations should be established through explicit versioned contracts and revi
 
 ## Draft machine-readable artifacts
 
-- [DeduplicationRecordIR JSON Schema](schemas/deduplication-record-ir.schema.json) — initial structural contract; external validation is pending.
+- [DeduplicationRecordIR JSON Schema](schemas/deduplication-record-ir.schema.json) — initial structural contract; Draft 2020-12 meta-schema validation is included in CI.
 - [Relationship taxonomy](docs/relationship-taxonomy-v1.md) — relationship codes and default merge eligibility rules.
 - [Independent observations example](examples/independent-observations.json) — illustrates why shared subject identity does not establish duplicate observations.
 
